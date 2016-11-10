@@ -1,5 +1,6 @@
 import System.IO 
 import Network.Socket
+import Control.Concurrent --library which has functionality allowing multiple connections at a time
 
 main :: IO ()
 main = do
@@ -14,14 +15,21 @@ mainLoop :: Socket -> IO ()
 mainLoop sock = do
     conn <- accept sock     -- accept a connection and handle it
     putStrLn "In Main Loop"
-    runConn conn            -- run our server's logic
+    forkIO(runConn conn)           -- run our server's logic
     mainLoop sock           -- repeat
  
 runConn :: (Socket, SockAddr) -> IO ()
 runConn (sock, _) = do
     hdl <- socketToHandle sock ReadWriteMode
+    hSetBuffering hdl LineBuffering
     contents <- hGetContents hdl
     putStrLn (contents)
-    hSetBuffering hdl NoBuffering
+    putStr "In RunConn"
     hPutStrLn hdl "Hello!"
     hClose hdl
+    --hdl <- socketToHandle sock ReadWriteMode
+    
+    --putStrLn "In RunConn"
+    --hSetBuffering hdl NoBuffering
+    --hPutStrLn hdl "Hello!"
+    --hClose hdl

@@ -7,9 +7,16 @@ main :: IO ()
 main = withSocketsDo $ do
     handle <- connectTo "127.0.0.1" (PortNumber 8000)
     hSetBuffering handle LineBuffering
+    echo handle
+    hClose handle
+
+echo :: Handle -> IO ()
+echo handle = do
     input <- getLine
-    hPutStr handle input
+    hPutStrLn handle input
     contents <- hGetContents handle
     putStrLn (contents)
-    hClose handle
+    if (contents == "q")
+        then return()
+        else echo handle
     
