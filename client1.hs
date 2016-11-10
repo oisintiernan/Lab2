@@ -11,7 +11,7 @@ echo :: IO ()
 echo = do
 	putStrLn "What command do you want to send the server"
 	input' <- getLine
-	h <- connectTo "37.228.237.243" (PortNumber 8000)
+	h <- connectTo "localhost" (PortNumber 8000)
     --h <- connectTo "www.scss.tcd.ie" (PortNumber 80)
 	hSetBuffering h LineBuffering--means that each character wont consume a whole packet to itself
 	hPutStrLn h (input')
