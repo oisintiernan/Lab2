@@ -5,8 +5,8 @@ import Control.Concurrent --library which has functionality allowing multiple co
 main :: IO ()
 main = do
     sock <- socket AF_INET Stream 0    -- create socket
-    setSocketOption sock ReuseAddr 1   -- make socket immediately reusable - eases debugging.
-    bind sock (SockAddrInet 8000 0x0100007f)   -- listen on TCP port 8000 address 127.0.0.1
+    setSocketOption sock ReuseAddr 1   -- make socket immediately reusable
+    bind sock (SockAddrInet 8000 0xC0A800B2)   -- listen on TCP port 8000 address 127.0.0.1
     listen sock 2                              -- set a max of 2 queued connections
     mainLoop sock                              -- unimplemented
 -- in Main.hs
@@ -22,10 +22,13 @@ runConn :: (Socket, SockAddr) -> IO ()
 runConn (sock, _) = do
     hdl <- socketToHandle sock ReadWriteMode
     hSetBuffering hdl LineBuffering
-    contents <- hGetContents hdl
+    contents <- hGetLine hdl
     putStrLn (contents)
-    putStr "In RunConn"
-    hPutStrLn hdl "Hello!"
+    if (contents == "KILL_SERVICE")
+        then hPutStrLn hdl "terminating service"
+        else if (contents == "HELO text")
+            then hPutStrLn hdl "HELO text\nIP:[ip address]\nPort:[port number]\nStudentID:[your student ID]\n"
+            else hPutStrLn hdl "wha???"
     hClose hdl
     --hdl <- socketToHandle sock ReadWriteMode
     

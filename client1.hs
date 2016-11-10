@@ -5,18 +5,21 @@ import Network.Socket
 
 main :: IO ()
 main = withSocketsDo $ do
-    handle <- connectTo "127.0.0.1" (PortNumber 8000)
-    hSetBuffering handle LineBuffering
-    echo handle
-    hClose handle
+    echo
 
-echo :: Handle -> IO ()
-echo handle = do
-    input <- getLine
-    hPutStrLn handle input
-    contents <- hGetContents handle
-    putStrLn (contents)
-    if (contents == "q")
-        then return()
-        else echo handle
+echo :: IO ()
+echo = do
+	putStrLn "What command do you want to send the server"
+	input' <- getLine
+	h <- connectTo "37.228.237.243" (PortNumber 8000)
+    --h <- connectTo "www.scss.tcd.ie" (PortNumber 80)
+	hSetBuffering h LineBuffering--means that each character wont consume a whole packet to itself
+	hPutStrLn h (input')
+    --hPutStr h ("GET /~ebarrett/lectures/cs4032/echo.php?message=" ++ input' ++ "\nHost: www.scss.tcd.ie  \r\n\r\n")
+	contents <- hGetContents h
+	putStr (contents)
+	hClose h
+	if (input' == "q")
+	    then return()
+	    else echo
     
