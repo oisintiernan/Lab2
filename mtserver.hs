@@ -7,7 +7,7 @@ main :: IO ()
 main = do
     sock <- socket AF_INET Stream 0    -- create socket
     setSocketOption sock ReuseAddr 1   -- make socket immediately reusable
-    bind sock (SockAddrInet 8080 0x8E00E3A0)   -- listen on TCP port 8000 address 127.0.0.10x8E00E3A0
+    bind sock (SockAddrInet 8080 0x0A3E00E8)   -- listen on TCP port 8000 address 127.0.0.10x8E00E3A0
     putStrLn "listening"
     listen sock 2                              -- set a max of 2 queued connections
     mainLoop sock                              -- unimplemented
