@@ -9,17 +9,20 @@ main = withSocketsDo $ do
 
 echo :: IO ()
 echo = do
-	putStrLn "What command do you want to send the server"
-	input' <- getLine
-	h <- connectTo "10.62.0.232" (PortNumber 3333)
+	
+	h <- connectTo "0.0.0.0" (PortNumber 8000)
     --h <- connectTo "www.scss.tcd.ie" (PortNumber 80)
 	hSetBuffering h LineBuffering--means that each character wont consume a whole packet to itself
-	hPutStrLn h (input')
+	talk h 
+	
     --hPutStr h ("GET /~ebarrett/lectures/cs4032/echo.php?message=" ++ input' ++ "\nHost: www.scss.tcd.ie  \r\n\r\n")
-	contents <- hGetContents h
-	putStr (contents)
-	hClose h
-	if (input' == "q")
-	    then return()
-	    else echo
-    
+	
+
+talk :: Handle -> IO ()
+talk hdl = do
+	putStrLn "What command do you want to send the server"
+	input' <- getLine
+	hPutStrLn hdl (input')
+	contents <- hGetLine hdl
+	putStrLn (contents)
+	talk hdl
