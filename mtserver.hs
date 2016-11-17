@@ -29,10 +29,11 @@ messaging :: Socket -> SockAddr -> Handle -> IO()
 messaging  sock addr hdl = do
     putStrLn "looped/started successfully"
     contents <- hGetLine hdl
+    let msg = words contents
     putStrLn (contents)
     if (contents == "KILL_SERVICE")
         then cls sock hdl
-        else if (contents == "HELO BASE_TEST")
+        else if ( (msg !! 0) == "HELO")
             then infoSplit addr hdl
             else hPutStrLn hdl "keep going"
     messaging sock addr hdl
