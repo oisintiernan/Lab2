@@ -32,7 +32,7 @@ messaging  sock addr hdl = do
     putStrLn (contents)
     if (contents == "KILL_SERVICE")
         then cls sock hdl
-        else if (contents == "HELO BASE_TEST\n")
+        else if (contents == "HELO BASE_TEST")
             then infoSplit addr hdl
             else hPutStrLn hdl "keep going"
     messaging sock addr hdl
