@@ -49,7 +49,7 @@ messaging  sock addr hdl = do
         then hClose hdl
         else if ( (msg !! 0) == "HELO")
             then infoSplit addr hdl
-            else hPutStr hdl "keep going\n"
+            else putStr "keep going\n"
     messaging sock addr hdl
 
 cls:: Socket -> Handle -> IO ()
