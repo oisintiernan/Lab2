@@ -1,29 +1,43 @@
-import System.IO 
-import Network.Socket
-import Control.Concurrent --library which has functionality allowing multiple connections at a time
 import Data.List.Split
+import System.IO
+import System.Exit
+import System.Environment
+import Network.Socket
+import Network.BSD
+import Control.Concurrent
 import Control.Monad
+
+myPool = 10
 
 main :: IO ()
 main = do
-    sock <- socket AF_INET Stream 0    -- create socket
-    putStrLn "hello"
-    setSocketOption sock ReuseAddr 1   -- make socket immediately reusable
-    bind sock (SockAddrInet 8080 (tupleToHostAddress (10, 62, 0, 232)))  
-    listen sock 2                              -- set a max of 2 queued connections                          -- unimplemented
-    mainLoop sock
+	args <- getArgs
+	let port = read $ head args :: Int
+	start port
 
-mainLoop :: Socket -> IO ()
-mainLoop sock = do
+start:: Int -> IO ()
+start port = do
+	sock <- socket AF_INET Stream 0    -- create socket    
+	setSocketOption sock ReuseAddr 1   -- make socket immediately reusable
+	bind sock (SockAddrInet (fromIntegral port) (tupleToHostAddress (10, 62, 0, 232)))  
+	listen sock 3 
+	(input,output) <- threadPoolIO myPool runConn                             -- set a max of 2 queued connections                          -- unimplemented
+	mainLoop sock input port
+
+mainLoop :: Socket -> Chan (Int,(Socket, SockAddr))-> Int -> IO ()
+mainLoop sock input port = do
     conn <- accept sock     -- accept a connection and handle it
-    forkIO(runConn conn)           -- run our server's logic           -- repeat
-    mainLoop sock
+    writeChan input (port,conn)
+    --forkIO(runConn conn)           -- run our server's logic           -- repeat
+    mainLoop sock input port
 
-runConn :: (Socket, SockAddr) -> IO ()
-runConn (sock, sa) = do
-    hdl <- socketToHandle sock ReadWriteMode
-    hSetBuffering hdl LineBuffering
-    messaging  sock sa hdl
+runConn :: (Int,(Socket, SockAddr)) -> IO ()
+runConn (port,(sock, sa)) = do
+	t <- myThreadId
+	putStrLn(show t)
+	hdl <- socketToHandle sock ReadWriteMode
+	hSetBuffering hdl LineBuffering
+	messaging  sock sa hdl
     
 messaging :: Socket -> SockAddr -> Handle -> IO()
 messaging  sock addr hdl = do
@@ -32,7 +46,7 @@ messaging  sock addr hdl = do
     let msg = words contents
     putStrLn (contents)
     if (contents == "KILL_SERVICE")
-        then cls sock hdl
+        then hClose hdl
         else if ( (msg !! 0) == "HELO")
             then infoSplit addr hdl
             else hPutStrLn hdl "keep going"
@@ -59,4 +73,15 @@ sq ('\'':s) | last s == '\'' = init s
         | otherwise      = s
 sq s                         = s
 
-    
+   
+threadPoolIO :: Int -> (a -> IO b) -> IO (Chan a, Chan b)
+threadPoolIO nr mutator = do
+    input <- newChan
+    output <- newChan
+    forM_ [1..nr] $
+        \_ -> forkIO (forever $ do
+            i <- readChan input
+            o <- mutator i
+            writeChan output o)
+    return (input, output)
+
